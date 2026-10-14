@@ -1,3 +1,5 @@
+//go:build cgo
+
 /**
  * Copyright 2026 Confluent Inc.
  *
@@ -35,48 +37,6 @@ type SerializingProducer[K, V any] struct {
 	producer        *Producer
 	keySerializer   Serializer
 	valueSerializer Serializer
-}
-
-// Serializer turns a typed key or value into the bytes produced to Kafka.
-//
-// Warning: THIS IS AN EXPERIMENTAL API, SUBJECT TO CHANGE OR REMOVAL.
-type Serializer interface {
-	SerializeWithHeaders(topic string, msg interface{}) ([]Header, []byte, error)
-
-	// SetClusterIDResolver hands the serializer a resolver for the ID of the
-	// Kafka cluster the [SerializingProducer] is connected to, for the part of
-	// its configuration that depends on it.
-	//
-	// The resolver is invoked whenever the serializer actually needs the ID,
-	// never while the producer is being built, so construction never waits on
-	// a broker - which it could not reach anyway when, for instance, the
-	// OAUTHBEARER token refresh callback is only served once the producer is
-	// polling. It may block for up to a minute while the producer reaches a
-	// broker, and reports an error if it cannot.
-	//
-	// The resolver is bound to the producer that supplied it and fails once
-	// that producer is closed, so a serializer must not outlive the producer
-	// it was given to, unless the cluster ID it needs was configured
-	// explicitly. Implementations that do not use the cluster ID, or that had
-	// one configured explicitly, ignore the resolver.
-	SetClusterIDResolver(resolve func() (string, error))
-
-	// Close releases the resources the serializer created itself. Resources
-	// the application supplied are left alone.
-	Close() error
-}
-
-// SerializerBuilder creates the [Serializer] a [SerializingProducer] uses for
-// its keys or its values.
-//
-// Build is given the producer's [ConfigMap] and whether it is building the key
-// serializer, and returns the serializer together with the ConfigMap to carry
-// on with: any property the serializer consumed itself is filtered out, so that
-// what reaches [NewProducer] holds Kafka properties only.
-//
-// Warning: THIS IS AN EXPERIMENTAL API, SUBJECT TO CHANGE OR REMOVAL.
-type SerializerBuilder interface {
-	Build(conf *ConfigMap, isKey bool) (Serializer, *ConfigMap, error)
 }
 
 // NewSerializingProducer is the same as [NewProducer], returning a

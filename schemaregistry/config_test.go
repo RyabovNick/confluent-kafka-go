@@ -56,8 +56,7 @@ func TestNewConfigFromKafkaConfigMap(t *testing.T) {
 	maybeFail("SchemaRegistryURL", expect(srConf.SchemaRegistryURL, ""))
 	maybeFail("filtered length", expect(len(*filteredConf), len(*kafkaConf)))
 	for key, value := range *kafkaConf {
-		filteredValue, err := filteredConf.Get(key, nil)
-		maybeFail("filtered value", err, expect(filteredValue, value))
+		maybeFail("filtered value", expect((*filteredConf)[key], value))
 	}
 
 	// The returned ConfigMap is a copy: modifying it leaves the original
